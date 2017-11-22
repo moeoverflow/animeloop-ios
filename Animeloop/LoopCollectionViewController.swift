@@ -18,6 +18,8 @@ class LoopCollectionViewController: UICollectionViewController, UICollectionView
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        NotificationCenter.default.addObserver(self, selector: #selector(rotated), name: NSNotification.Name.UIDeviceOrientationDidChange, object: nil)
 
         collectionView?.register(UINib(nibName: "LoopCollectionViewCell", bundle: nil), forCellWithReuseIdentifier: "LoopCell")
         
@@ -28,6 +30,10 @@ class LoopCollectionViewController: UICollectionViewController, UICollectionView
         refreshData()
     }
     
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
+    
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
         // Dispose of any resources that can be recreated.
@@ -36,9 +42,10 @@ class LoopCollectionViewController: UICollectionViewController, UICollectionView
     override var preferredStatusBarStyle: UIStatusBarStyle {
         return .lightContent
     }
-    
+
     var refreshControl = UIRefreshControl()
     
+    private var column = 2
     private var loops: [JSON] = []
 }
 
@@ -70,8 +77,20 @@ extension LoopCollectionViewController {
 
 extension LoopCollectionViewController {
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        let width = self.view.bounds.size.width / 2
+        column = { () -> Int in
+            let width = view.bounds.size.width
+            if width < 667.0 {
+                return 2
+            } else if width < 1024 {
+                return 3
+            } else {
+                return 4
+            }
+        }()
+
+        let width = self.view.bounds.size.width / CGFloat(column)
         let height = width * 9 / 16
+        
         return CGSize(width: width, height: height)
     }
     
@@ -85,6 +104,12 @@ extension LoopCollectionViewController {
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumInteritemSpacingForSectionAt section: Int) -> CGFloat {
         return CGFloat()
+    }
+}
+
+extension LoopCollectionViewController {
+    @objc func rotated() {
+        collectionView?.collectionViewLayout.invalidateLayout()
     }
 }
 
